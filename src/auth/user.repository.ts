@@ -4,6 +4,7 @@ import {ConflictException, ForbiddenException, Injectable, InternalServerErrorEx
 import {AuthCredentialsDto} from "./dto/auth-credentials.dto";
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import {JwtPayloadInterface} from "./jwt-payload.interface";
 
 @Injectable()
 export class UserRepository extends Repository<User>{
@@ -34,7 +35,7 @@ export class UserRepository extends Repository<User>{
         }
     }
 
-    async loginUser(authCredentialsDto: AuthCredentialsDto): Promise<string> {
+    async loginUser(authCredentialsDto: AuthCredentialsDto): Promise<JwtPayloadInterface> {
         const { username , password } = authCredentialsDto;
         const user = await this.createQueryBuilder('user')
             .where("user.username = :username", {username: username})
@@ -45,7 +46,7 @@ export class UserRepository extends Repository<User>{
         if (!await this.validatePassword(password,user.password,user.salt)){
             throw new ForbiddenException('password is incorrect.')
         }
-        return user.username;
+        return {username: user.username};
     }
 
     private async validatePassword(postedPassword: string, userHashedPassword: string , userSalt: string): Promise<boolean>{
